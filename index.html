@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-<!-- saved from url=(0045)https://rscard.px-lab.com/startuper/#calendar -->
 <html lang="en-US" class="theme-color-e8676b light_skin desktop cssall cssgradients rgba opacity supports textshadow cssanimations bgrepeatround bgrepeatspace boxshadow csstransforms csstransforms3d csstransitions" style="overflow: visible;"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><style>.dismissButton{background-color:#fff;border:1px solid #dadce0;color:#1a73e8;border-radius:4px;font-family:Roboto,sans-serif;font-size:14px;height:36px;cursor:pointer;padding:0 24px}.dismissButton:hover{background-color:rgba(66,133,244,0.04);border:1px solid #d2e3fc}.dismissButton:focus{background-color:rgba(66,133,244,0.12);border:1px solid #d2e3fc;outline:0}.dismissButton:hover:focus{background-color:rgba(66,133,244,0.16);border:1px solid #d2e2fd}.dismissButton:active{background-color:rgba(66,133,244,0.16);border:1px solid #d2e2fd;box-shadow:0 1px 2px 0 rgba(60,64,67,0.3),0 1px 3px 1px rgba(60,64,67,0.15)}.dismissButton:disabled{background-color:#fff;border:1px solid #f1f3f4;color:#3c4043}
 </style><style>.gm-style .gm-style-mtc label,.gm-style .gm-style-mtc div{font-weight:400}
 </style><style>.gm-control-active>img{box-sizing:content-box;display:none;left:50%;pointer-events:none;position:absolute;top:50%;transform:translate(-50%,-50%)}.gm-control-active>img:nth-child(1){display:block}.gm-control-active:hover>img:nth-child(1),.gm-control-active:active>img:nth-child(1){display:none}.gm-control-active:hover>img:nth-child(2),.gm-control-active:active>img:nth-child(3){display:block}
@@ -164,12 +163,7 @@ var exactmetrics_frontend = {"js_events_tracking":"true","download_extensions":"
   }
 
   if (window.hasOwnProperty('web3')) {
-    // Note a closure can't be used for this var because some sites like
-    // www.wnyc.org do a second script execution via eval for some reason.
     window.__disableDappDetectionInsertion = true
-    // Likely oldWeb3 is undefined and it has a property only because
-    // we defined it. Some sites like wnyc.org are evaling all scripts
-    // that exist again, so this is protection against multiple calls.
     if (window.web3 === undefined) {
       return
     }
@@ -190,37 +184,12 @@ var exactmetrics_frontend = {"js_events_tracking":"true","download_extensions":"
       }
     })
   }
-})()</script><script>/*
- * This entire block is wrapped in an IIFE to prevent polluting the scope of the web page with
- * functions created by this extension.
- */
-(function(realOpen, realSend, realFetch) {
-    /*
-     * Override common funcions that accept callbacks, such as
-     * setInterval, to keep track of what script each callback comes
-     * from. Skimmers commonly have the actual skimming code in a
-     * callback, so most of the time when we intercept a request,
-     * document.currentScript is null. To solve this, the script is
-     * stored in a closure when the callback is passed, and assigned
-     * to callbackCurrentscript when the callback is run.
-     */
+})()</script><script>
 
     let callbackCurrentScript = null;
-
-    // Maps callbacks originally passed to patched versions
     const patchedCallbackMap = new WeakMap();
-
-    // Maps patched callbacks to original versions
     const originalCallbackMap = new WeakMap();
 
-    /**
-     *  Generates the function with which to override the
-     *  callback-accepting functions.
-     *  @param realFn The real function, e.g. setInterval.
-     *  @param callbackIndex The index of the callback in the
-     *  arguments of realFn. For example, the callback is the first
-     *  argument in setInterval, so callbackIndex should be 0.
-     */
     function generateAddCallbackFunction(realFn, callbackIndex) {
         return function(...args) {
             const script = document.currentScript || callbackCurrentScript;
@@ -353,15 +322,6 @@ var exactmetrics_frontend = {"js_events_tracking":"true","download_extensions":"
         }
     }
 
-    /*
-     * This script has some dependencies that need to be included
-     * without polluting the global namespace. This is achieved by
-     * inserting them into the source at build time in the
-     * makefile. This is preferable to loading the dependencies via
-     * AJAX, because the latter doesn't work if the CSP disallows
-     * unsafe-eval. The following tag tells the makefile where to
-     * insert the dependencies.
-     */
     // <DEPENDENCIES>
 class InputAnalyser {
     constructor(_inputs) {
@@ -569,16 +529,6 @@ function sendMessage(type, data, tabId, options) {
         chrome.runtime.sendMessage({ data, type });
     }
 }
-/*
- * Netcraft Extension
- * constants JavaScript
- */
-
-/* eslint sort-keys: 'off' */
-/* sort-keys is disabled as the constants are separated by type */
-
-// Aligned values here make for easier reading, so we disable prettier
-
 // prettier-ignore
 const cons = (function() {
     const cryptojackersUrl = 'https://www.netcraft.com/apps/help/glossary/#crypto-miners';
@@ -949,28 +899,6 @@ class CardNumber extends RelevantInput {
 
     const inputAnalyser = new InputAnalyser();
 
-    /*
-     * Implementations to overwrite window.XMLHttpRequest.prototype.open,
-     * window.XMLHttpRequest.prototype.send and window.fetch. These are (to my knowledge) the two
-     * APIs that can be used to make requests within Javascript. If there are more, then they will
-     * also need to be overridden and intercepted like below.
-     */
-
-    /**
-     * This function generates functions to be used for wrapping and intercepting network
-     * requests, namely from XMLHttpRequest and the Fetch API. It works by taking the real
-     * function we want to intercept the request for, and then uses document.currentScript to work
-     * out which file initiated the request. It sends those details to the content script which
-     * forwards it to the background script, and then we await a confirmation of receipt from the
-     * background page. Finally, the real request is sent by forwarding parameters to the original
-     * function passed in.
-     * @param realFn A reference to the real function that is being intercepted.
-     * @param getRequestUrlFn A function used to get the request URL from the object. This is
-     * necessary as the mechanisms for different objects differs depending on implementation.
-     * @param noBody Set to true if the request generated by realFn is guaranteed to lack a body,
-     * e.g. if it sets the src of an image or script.
-     * @returns {function(...[*]=): PromiseLike<any | never>}
-     */
     function generateRequestInterceptFn(realFn, getRequestUrlFn, noBody) {
         return function(...args) {
             /*
@@ -984,14 +912,6 @@ class CardNumber extends RelevantInput {
             requestUrlObj = new URL(requestUrl);
             pageUrlObj = new URL(location.href);
 
-            /*
-             * Delaying outgoing requests sometimes causes problems
-             * with elements such as video players and dynamically
-             * loaded images, so it should only be done when
-             * necessary. Before inputAnalyser is defined and when the
-             * request is to the same hostname as the page, this can
-             * be skipped.
-             */
             if (
                 inputAnalyser === undefined ||
                 requestUrlObj.hostname === pageUrlObj.hostname
@@ -1092,20 +1012,6 @@ class CardNumber extends RelevantInput {
         realOpen.apply(this, args);
     };
 
-    /*
-     * Monkeypatches for setting the src of images and scripts, an
-     * indirect way of sending requests that is often employed by
-     * skimmers. The getters are also overridden to make the behaviour
-     * seem identical to the original implementation. Otherwise, if a
-     * script were to set an src and immediately read it, it would
-     * come back as the old value.
-     */
-
-    /*
-     * WeakMap maps an object to a value. This is used to store the
-     * new src of an object when its true src property may not yet
-     * have been set.
-     */
     const srcMap = new WeakMap();
 
     for (const srcElement of [
@@ -1248,104 +1154,6 @@ var date = {"months":["January","February","March","April","May","June","July","
     <li id="menu-item-477" class="menu-item menu-item-type-custom menu-item-object-custom current-menu-item current_page_item menu-item-home"><a href="#contact">Contact</a></li>
     </ul></nav> </div><div id="mCSB_1_scrollbar_vertical" class="mCSB_scrollTools mCSB_1_scrollbar mCS-dark mCSB_scrollTools_vertical" style="display: none;"><div class="mCSB_draggerContainer"><div id="mCSB_1_dragger_vertical" class="mCSB_dragger" style="position: absolute; min-height: 30px; top: 0px;" oncontextmenu="return false;"><div class="mCSB_dragger_bar" style="line-height: 30px;"></div></div><div class="mCSB_draggerRail"></div></div></div></div></div>
 </div>
-<!-- <div class="sidebar sidebar-fixed">
-<button class="btn-sidebar btn-sidebar-close"><i class="rsicon rsicon-close"></i></button>
-<div class="widget-area mCustomScrollbar _mCS_2"><div id="mCSB_2" class="mCustomScrollBox mCS-dark mCSB_vertical mCSB_inside" tabindex="0"><div id="mCSB_2_container" class="mCSB_container" style="position: relative; top: -1615px; left: 0px;" dir="ltr">
-<aside class="widget widget-profile">
-<div class="profile-photo">
-<img src="./data/startuper-1.jpg" alt="Author Image" class="mCS_img_loaded">
-</div>
-<div class="profile-info">
-<h2 class="profile-title">HEMANTH</h2>
-<h3 class="profile-position">Startuper</h3>
-</div>
-</aside>
-<aside class="widget widget_search">
-<form method="get" class="search-form" action="https://rscard.px-lab.com/startuper/">
-<label>
-<span class="screen-reader-text">Search for</span>
-<input type="search" class="search-field" placeholder="Search ..." value="" name="s" title="Search for:">
-</label>
-<input type="submit" class="search-submit" value="Search">
-</form></aside>
-<aside class="widget widget_recent_entries">
-<h2 class="widget-title">Recent Posts</h2>
-<ul>
-<li>
-<a href="https://rscard.px-lab.com/startuper/2016/02/04/embrace-the-universe/">Embrace the universe</a>
-</li>
-<li>
-<a href="https://rscard.px-lab.com/startuper/2016/02/04/some-story/">Some love story</a>
-</li>
-<li>
-<a href="https://rscard.px-lab.com/startuper/2015/12/01/disneys-alice-in-wonderland/">DISNEY’S ALICE IN WONDERLAND</a>
-</li>
-<li>
-<a href="https://rscard.px-lab.com/startuper/2015/11/23/ipsum-project-web/">IPSUM PROJECT WEB</a>
-</li>
-<li>
-<a href="https://rscard.px-lab.com/startuper/2015/11/23/web-dolor-sit-amet/">GIRL DOLOR SIT AMET</a>
-</li>
-</ul>
-</aside><aside class="widget widget_recent_comments"><h2 class="widget-title">Recent Comments</h2><ul id="recentcomments"><li class="recentcomments"><span class="comment-author-link">Maria</span> on <a href="https://rscard.px-lab.com/startuper/product/woo-ninja-3/#comment-35">Woo Ninja</a></li><li class="recentcomments"><span class="comment-author-link">Maria</span> on <a href="https://rscard.px-lab.com/startuper/product/premium-quality-2/#comment-34">Premium Quality</a></li><li class="recentcomments"><span class="comment-author-link">Maria</span> on <a href="https://rscard.px-lab.com/startuper/product/woo-logo-2/#comment-28">Woo Logo</a></li><li class="recentcomments"><span class="comment-author-link">Maria</span> on <a href="https://rscard.px-lab.com/startuper/product/ninja-silhouette-2/#comment-25">Ninja Silhouette</a></li><li class="recentcomments"><span class="comment-author-link">Maria</span> on <a href="https://rscard.px-lab.com/startuper/product/ship-your-idea-2/#comment-13">Ship Your Idea</a></li></ul></aside><aside class="widget widget_archive"><h2 class="widget-title">Archives</h2>
-<ul>
-<li><a href="https://rscard.px-lab.com/startuper/2016/02/">February 2016</a></li>
-<li><a href="https://rscard.px-lab.com/startuper/2015/12/">December 2015</a></li>
-<li><a href="https://rscard.px-lab.com/startuper/2015/11/">November 2015</a></li>
-</ul>
-</aside><aside class="widget widget_categories"><h2 class="widget-title">Categories</h2>
-<ul>
-<li class="cat-item cat-item-2"><a href="https://rscard.px-lab.com/startuper/category/b-voice/">B-Voice</a>
-</li>
-<li class="cat-item cat-item-3"><a href="https://rscard.px-lab.com/startuper/category/interesting/">Interesting</a>
-</li>
-<li class="cat-item cat-item-4"><a href="https://rscard.px-lab.com/startuper/category/my-personal/">My personal</a>
-</li>
-<li class="cat-item cat-item-5"><a href="https://rscard.px-lab.com/startuper/category/news/">News</a>
-</li>
-<li class="cat-item cat-item-1"><a href="https://rscard.px-lab.com/startuper/category/uncategorized/">Uncategorized</a>
-</li>
-</ul>
-</aside><aside class="widget widget_meta"><h2 class="widget-title">Meta</h2>
-<ul>
-<li><a href="https://rscard.px-lab.com/startuper/wp-login.php">Log in</a></li>
-<li><a href="https://rscard.px-lab.com/startuper/feed/">Entries feed</a></li>
-<li><a href="https://rscard.px-lab.com/startuper/comments/feed/">Comments feed</a></li>
-<li><a href="https://wordpress.org/">WordPress.org</a></li>
-</ul>
-</aside><aside class="widget rs-card-contact-form"><h2 class="widget-title">Contact Us</h2> <form class="contactForm" action="https://rscard.px-lab.com/startuper/#" method="post">
-<div class="input-field">
-<input class="contact-name" type="text" name="name">
-<span class="line"></span>
-<label>Name</label>
-</div>
-<div class="input-field">
-<input class="contact-email" type="email" name="email">
-<span class="line"></span>
-<label>Email</label>
-</div>
-<div class="input-field">
-<input class="contact-subject" type="text" name="subject">
-<span class="line"></span>
-<label>Subject</label>
-</div>
-<div class="input-field">
-<textarea class="contact-message" rows="4" name="message"></textarea>
-<span class="line"></span>
-<label>Message</label>
-</div>
-<div class="g-recaptcha" data-theme="light" data-sitekey="" id="recaptcha2"></div>
-<div class="check-field">
-<input type="checkbox" name="rsPivacyPolicy" id="rsPivacyPolicy">
-<label for="rsPivacyPolicy">I have read the Privacy Policy note.</label>
-</div>
-<span class="btn-outer btn-primary-outer ripple">
-<input class="contact-submit btn btn-lg btn-primary" type="submit" value="Send">
-</span>
-<div class="contact-response"></div>
-</form>
-</aside> </div><div id="mCSB_2_scrollbar_vertical" class="mCSB_scrollTools mCSB_2_scrollbar mCS-dark mCSB_scrollTools_vertical" style="display: block;"><div class="mCSB_draggerContainer"><div id="mCSB_2_dragger_vertical" class="mCSB_dragger" style="position: absolute; min-height: 30px; display: block; height: 106px; max-height: 503px; top: 333px;" oncontextmenu="return false;"><div class="mCSB_dragger_bar" style="line-height: 30px;"></div></div><div class="mCSB_draggerRail"></div></div></div></div></div>
-</div> -->
 <div class="wrapper">
 <header class="header" style="min-height: 60px;">
 <div class="head-bg" style="background-image: url(&#39;background.png&#39;)"></div>
@@ -1634,7 +1442,6 @@ Govt High school, Begur</a>
     <h3>Face Detection Based Attendance system</h3>
     <h4>
     Recognize the face and save the attendance in a CSV file
-    WiFi deauther using ESP8266. This allows easily perform a variety of actions to test WiFi networks
     </h4>
     </div>
     </div>
@@ -1682,38 +1489,6 @@ Govt High school, Begur</a>
 <div class="animate-up animated">
 <h2 class="section-title">Contact Me</h2>
 <div class="row">
-<!-- <div class="col-sm-6">
-<div class="section-box" style="min-height: 587px;">
-<h3>Feel free to contact me</h3>
-<form class="contactForm" action="https://rscard.px-lab.com/startuper/#" method="post">
-<div class="input-field">
-<input class="contact-name" type="text" name="name">
-<span class="line"></span>
-<label>Name</label>
-</div>
-<div class="input-field">
-<input class="contact-email" type="email" name="email">
-<span class="line"></span>
-<label>Email</label>
-</div>
-<div class="input-field">
-<input class="contact-subject" type="text" name="subject">
-<span class="line"></span>
-<label>Subject</label>
-</div>
-<div class="input-field">
-<textarea class="contact-message" rows="4" name="message"></textarea>
-<span class="line"></span>
-<label>Message</label>
-</div><div class="g-recaptcha" data-theme="light" data-sitekey="" id="recaptcha1"></div><div class="check-field">
-<input type="checkbox" name="rsPivacyPolicy" id="rsPivacyPolicy">
-<label for="rsPivacyPolicy">I have read the Privacy Policy note.</label>
-</div><span class="btn-outer btn-primary-outer ripple">
-<input class="contact-submit btn btn-lg btn-primary" type="submit" value="Send">
-</span>
-<div class="contact-response"></div>
-</form> </div>
-</div> -->
 <div class="col-sm-3"></div>
 <div class="col-sm-6 ">
 <div class="section-box contact-info has-map" style="min-height: 587px;">
